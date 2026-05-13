@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Cantabrana: Memoria Viva</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Spectral:ital,wght@1,400;1,700&display=swap');
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { background:#000; overflow:hidden; font-family:'Spectral', serif; height:100vh; color:#7d6b58; }
+        #viewport { position:fixed; inset:0; perspective:1500px; display:flex; justify-content:center; align-items:center; background:radial-gradient(circle,#0a0a0a 0%,#000 100%); z-index:1; }
+        #canvas-texturas { position: absolute; inset: 0; z-index: 2; pointer-events: none; mix-blend-mode: screen; }
+        #foto-activa { max-width:95%; max-height:90%; object-fit:contain; opacity:0; filter:brightness(0) blur(15px); transform:translateZ(-200px); transition:5s cubic-bezier(0.4,0,0.2,1); z-index: 3; }
+        .emerger { opacity:1 !important; filter:brightness(0.9) blur(0px) !important; transform:translateZ(100px) !important; }
+        #capa-inicio { position:fixed; inset:0; background:#000; z-index:6000; display:flex; flex-direction:column; justify-content:center; align-items:center; transition:4s; }
+        #btn-iniciar { background:#000; border:1px solid #332b24; color:#8a7a6a; padding:25px 60px; cursor:pointer; letter-spacing:5px; text-transform:uppercase; }
+        #subtitulos { position:fixed; bottom:120px; width:80%; left:10%; text-align:center; color:#fff; background:rgba(0,0,0,0.8); padding:15px; z-index:7000; display:none; border:1px solid #332b24; }
+    </style>
+</head>
+<body>
+
+<div id="capa-inicio">
+    <button id="btn-iniciar">Escuchar el tiempo</button>
+</div>
+
+<div id="viewport">
+    <canvas id="canvas-texturas"></canvas>
+    <img id="foto-activa" src="" alt="">
+</div>
+
+<div id="subtitulos"></div>
+<audio id="musica-ambiente" loop></audio>
+<audio id="player-jota"></audio>
+
+<script>
+// --- CONFIGURACIÓN ---
+const OPENAI_API_KEY `const apiKey = "";`.
+*   Guarda el archivo.
+// ---------------------
+
+const urlParams = new URLSearchParams(window.location.search);
+const jotaId = urlParams.get('jota');
+const visor = document.getElementById('foto-activa');
+const jotaPlayer = document.getElementById('player-jota');
+const ambiente = document.getElementById('musica-ambiente');
+const subtitulosBox = document.getElementById('subtitulos');
+
+// Familias de texturas (Basado en tus preferencias guardadas)
+const familiasTexturas = ["agua marina", "oscura", "vino", "plata", "oro miel", "alquitrán", "magma", "tinta", "hielo", "efecto glaciar", "musgo"];
+
+async function generarTexturaIA() {
+    const texturaAleatoria = familiasTexturas[Math.floor(Math.random() * familiasTexturas.length)];
+    console.log("Generando textura visual: " + texturaAleatoria);
+    
+    try {
+        const response = await fetch('https://api.openai.com/v1/images/generations', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${OPENAI_API_KEY}`
+            },
+            body: JSON.stringify({
+                prompt: `Textura fluida de ${texturaAleatoria}, estilo macro, orgánica, brotando como algo vivo, cinemática, 4k, sin distorsiones`,
+                n: 1,
+                size: "1024x1024"
+            })
+        });
+        const data = await response.json();
+        aplicarTexturaAlCanvas(data.data[0].url);
+    } catch (e) {
+        console.error("Error con OpenAI: ", e);
+    }
+}
+
+function aplicarTexturaAlCanvas(url) {
+    const canvas = document.getElementById('canvas-texturas');
+    canvas.style.backgroundImage = `url('${url}')`;
+    canvas.style.backgroundSize = 'cover';
+    canvas.style.opacity = '0.4';
+}
+
+async function init() {
+    // Simulamos carga de datos sin usar .php (compatible con GitHub)
+    const res = await fetch('galeria.json').catch(e => console.log("Falta galeria.json"));
+    if(!res) return;
+    const data = await res.json();
+
+    document.getElementById('btn-iniciar').onclick = async () => {
+        document.getElementById('capa-inicio').style.opacity = '0';
+        setTimeout(() => document.getElementById('capa-inicio').style.display = 'none', 4000);
+        
+        if(jotaId) {
+            jotaPlayer.src = `jotas/${jotaId}`;
+            jotaPlayer.play();
+            subtitulosBox.style.display = 'block';
+            subtitulosBox.textContent = "Iniciando memoria viva...";
+            
+            // Lanzamos la IA
+            generarTexturaIA();
+            
+            // Añade esto justo después del onclick
+ambiente.play().then(() => {
+    console.log("Ambiente sonando");
+}).catch(err => {
+    console.log("Error de audio: ", err);
+});
+
+if(jotaId) {
+    jotaPlayer.src = `jotas/${jotaId}`; // Asegúrate de que la carpeta sea jotas
+    jotaPlayer.play();
+}
+git add
+            // Carrusel de fotos (simplificado para que funcione siempre)
+            let fotos = [...data.fotos_arcos, ...data.fotos_detalles];
+            setInterval(() => {
+                const foto = fotos[Math.floor(Math.random()*fotos.length)];
+                visor.src = foto.includes('/') ? foto : `fotos/detalles/${foto}`;
+                visor.classList.add('emerger');
+                // Cada vez que cambia la foto, pedimos una textura nueva a la IA
+                generarTexturaIA();
+            }, 12000);
+        }
+    };
+}
+
+window.onload = init;
+</script>
+</body>
+</html>
+
