@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport"
+content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+
+<title>Cantabrana: Memoria Viva</title>
+
+<meta name="description"
+content="Archivo sensorial de memoria oral y arquitectura popular de Cantabria.">
+
+<meta property="og:title"
+content="Cantabrana: Memoria Viva">
+
+<meta property="og:type"
+content="website">
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Spectral:ital,wght@1,400;1,700&display=swap');
+
+* {
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+}
+
+body {
+    background:#000;
+    overflow:hidden;
+    font-family:'Spectral', serif;
+    height:100vh;
+    color:#7d6b58;
+}
+
+.sr-only {
+    position:absolute;
+    width:1px;
+    height:1px;
+    padding:0;
+    margin:-1px;
+    overflow:hidden;
+    clip:rect(0,0,0,0);
+    border:0;
+}
+
+#viewport {
+    position:fixed;
+    inset:0;
+    perspective:1500px;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    background:radial-gradient(circle,#0a0a0a 0%,#000 100%);
+    z-index:1;
+}
+
+#viewport::after {
+    content:'';
+    position:absolute;
+    inset:0;
+    background:
+    radial-gradient(circle,
+    rgba(255,140,60,0.03),
+    transparent 70%);
+    mix-blend-mode:screen;
+    pointer-events:none;
+    animation:pulso 8s ease-in-out infinite;
+}
+
+@keyframes pulso {
+    0%,100% { opacity:0.2; }
+    50% { opacity:0.6; }
+}
+
+#foto-activa {
+    max-width:95%;
+    max-height:90%;
+    object-fit:contain;
+    opacity:0;
+    filter:brightness(0) blur(15px);
+    transform:translateZ(-200px);
+    transition:5s cubic-bezier(0.4,0,0.2,1);
+    will-change:transform,opacity,filter;
+}
+
+.emerger {
+    opacity:1 !important;
+    filter:brightness(0.9) blur(0px) !important;
+    transform:translateZ(100px) !important;
+}
+
+.llama-viva {
+    animation:
+    flicker-organico 0.15s ease-in-out infinite,
+    sway-3d 12s ease-in-out infinite alternate;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    * {
+        animation:none !important;
+        transition:opacity 2s !important;
+    }
+
+    #foto-activa {
+        transform:none !important;
+    }
+
+    .llama-viva {
+        animation:none !important;
+    }
+}
+
+#subtitulos {
+    position:fixed;
+    bottom:120px;
+    width:80%;
+    left:10%;
+    text-align:center;
+    color:#fff;
+    font-size:1.2rem;
+    background:rgba(0,0,0,0.8);
+    padding:15px;
+    border-radius:5px;
+    z-index:7000;
+    display:none;
+    border:1px solid #332b24;
+}
+
+#contenedor-final {
+    position:fixed;
+    inset:0;
+    z-index:5000;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    background:#000;
+    opacity:0;
+    pointer-events:none;
+    transition:opacity 4s ease-in-out;
+}
+
+#sello-lacrado {
+    width:50%;
+    max-width:350px;
+    filter:drop-shadow(0 0 50px rgba(0,0,0,1)) brightness(0);
+    transform:scale(0.3) translateZ(-800px) rotateX(60deg);
+    transition:
+    transform 7s cubic-bezier(0.16,1,0.3,1),
+    filter 6s ease-out;
+}
+
+.final-activo {
+    opacity:1 !important;
+    pointer-events:all !important;
+}
+
+.final-activo #sello-lacrado {
+    transform:scale(1) translateZ(0) rotateX(0deg) !important;
+    filter:brightness(1.1) !important;
+}
+
+#capa-inicio {
+    position:fixed;
+    inset:0;
+    background:#000;
+    z-index:6000;
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    align-items:center;
+    transition:4s;
+}
+
+#btn-iniciar {
+    background:#000;
+    border:1px solid #332b24;
+    color:#8a7a6a;
+    padding:25px 60px;
+    cursor:pointer;
+    letter-spacing:5px;
+    text-transform:uppercase;
+    font-size:1rem;
+}
+
+#btn-iniciar:focus {
+    outline:3px solid #8a7a6a;
+    background:#1a1a1a;
+}
+
+#info-scroll {
+    position:fixed;
+    bottom:50px;
+    width:100%;
+    text-align:center;
+    z-index:100;
+    opacity:0;
+    transition:4s;
+}
+</style>
+</head>
+<body>
+
+<div id="anuncio-lector"
+class="sr-only"
+aria-live="assertive"></div>
+
+<div id="capa-inicio">
+    <img id="pergamino-img"
+    style="width:40%;max-width:250px;opacity:0.3;margin-bottom:40px;"
+    alt="Icono de pergamino antiguo">
+
+    <button id="btn-iniciar"
+    aria-label="Comenzar experiencia sensorial de Cantabrana">
+    Escuchar el tiempo
+    </button>
+</div>
+
+<div id="viewport">
+    <img id="foto-activa" src="" alt="">
+</div>
+
+<div id="subtitulos" role="status"></div>
+
+<div id="info-scroll">
+    <p id="texto-identidad"></p>
+</div>
+
+<div id="contenedor-final">
+    <img id="sello-lacrado"
+    src=""
+    alt="Sello de lacre final">
+</div>
+
+<audio id="musica-ambiente" loop></audio>
+
+<audio id="player-jota">
+    <track id="track-subtitulos"
+    kind="subtitles"
+    srclang="es"
+    label="Español">
+</audio>
+
+<script>
+const urlParams = new URLSearchParams(window.location.search);
+const jotaId = urlParams.get('jota');
+
+const visor = document.getElementById('foto-activa');
+const jotaPlayer = document.getElementById('player-jota');
+const ambiente = document.getElementById('musica-ambiente');
+const anuncioLector = document.getElementById('anuncio-lector');
+const subtitulosBox = document.getElementById('subtitulos');
+
+let inicioSesion = null;
+
+let datosSesion = {
+    jota:null,
+    municipio:null,
+    reducedMotion:
+    window.matchMedia('(prefers-reduced-motion: reduce)').matches,
+    screenReader:false
+};
+
+function narrar(texto) {
+    anuncioLector.textContent = texto;
+    console.log(texto);
+}
+
+function precargar(lista) {
+    lista.forEach(src => {
+        const img = new Image();
+        img.src = src;
+    });
+}
+
+async function init() {
+    try {
+
+        if (
+            navigator.userAgent.match(/VoiceOver|JAWS|NVDA|TalkBack/i)
+        ) {
+            datosSesion.screenReader = true;
+        }
+
+        const res = await fetch('galeria.json');
+        const data = await res.json();
+
+        document.getElementById('pergamino-img').src =
+        `assets/pergamino/${
+            data.pergamino[
+                Math.floor(Math.random()*data.pergamino.length)
+            ]
+        }`;
+
+        ambiente.src =
+        `ambiente/${
+            data.ambientes[
+                Math.floor(Math.random()*data.ambientes.length)
+            ]
+        }`;
+
+        document.getElementById('sello-lacrado').src =
+        `assets/sello/${
+            data.sello[
+                Math.floor(Math.random()*data.sello.length)
+            ]
+        }`;
+
+        let fotos = [
+            ...data.fotos_arcos.map(f=>`fotos/arcos_puertas/${f}`),
+            ...data.fotos_detalles.map(f=>`fotos/detalles/${f}`)
+        ];
+
+        fotos.sort(() => Math.random() - 0.5);
+
+        precargar(fotos);
+
+        const ultimaVisita = localStorage.getItem('ultima_visita');
+
+        if(ultimaVisita) {
+            narrar('La memoria reconoce tu regreso.');
+        }
+
+        document.getElementById('btn-iniciar').onclick = async () => {
+
+            inicioSesion = Date.now();
+
+            await ambiente.play().catch(()=>{});
+            ambiente.pause();
+            ambiente.currentTime = 0;
+
+            document.getElementById('capa-inicio').style.opacity='0';
+
+            ambiente.play().catch(()=>{});
+
+            narrar('Iniciando memoria viva.');
+
+            if(jotaId) {
+
+                const limpio =
+                jotaId.replace('.mp3','').split('--')[0];
+
+                const ultimoGuion = limpio.lastIndexOf('-');
+
+                const voz =
+                limpio.substring(0, ultimoGuion)
+                .replace(/_/g,' ');
+
+                const pueblo =
+                limpio.substring(ultimoGuion + 1)
+                .replace(/_/g,' ');
+
+                datosSesion.jota = jotaId;
+                datosSesion.municipio = pueblo;
+
+                fetch('api/registrar.php', {
+                    method:'POST',
+                    headers:{
+                        'Content-Type':'application/json'
+                    },
+                    body:JSON.stringify(datosSesion)
+                });
+
+                document.getElementById('texto-identidad').innerHTML =
+                `Voz: <b>${voz}</b> — Municipio: <b>${pueblo}</b>`;
+
+                setTimeout(() => {
+
+                    document.getElementById('capa-inicio').style.display='none';
+
+                    ambiente.pause();
+
+                    jotaPlayer.src = `jotas/${jotaId}`;
+
+                    document.getElementById('track-subtitulos').src =
+                    `subtitulos/${jotaId.replace('.mp3','.vtt')}`;
+
+                    jotaPlayer.play();
+
+                    subtitulosBox.style.display='block';
+
+                    subtitulosBox.textContent =
+                    `Escuchando a ${voz} desde ${pueblo}...`;
+
+                    document.getElementById('info-scroll').style.opacity='0.7';
+
+                    lanzarCarrusel(fotos);
+
+                },5000);
+            }
+        };
+
+    } catch(e) {
+        narrar('Error en la conexión del sistema.');
+    }
+}
+
+function lanzarCarrusel(lista) {
+
+    let i = 0;
+
+    const ciclo = () => {
+
+        if(jotaPlayer.paused || jotaPlayer.ended) return;
+
+        visor.classList.remove('emerger','llama-viva');
+
+        setTimeout(() => {
+
+            const archivo = lista[i];
+
+            const descripcion = archivo
+            .split('/')
+            .pop()
+            .replace('.jpg','')
+            .replace(/_/g,' ');
+
+            visor.src = archivo;
+
+            visor.alt =
+            `Detalle arquitectónico: ${descripcion}`;
+
+            narrar(`Imagen actual: ${descripcion}`);
+
+            visor.onload = () => {
+
+                visor.classList.add('emerger','llama-viva');
+
+                i = (i + 1) % lista.length;
+
+                setTimeout(ciclo,16000);
+            };
+
+        },4000);
+    };
+
+    ciclo();
+}
+
+jotaPlayer.onended = () => {
+
+    const duracion = Math.floor((Date.now() - inicioSesion)/1000);
+
+    fetch('api/finalizar.php', {
+        method:'POST',
+        headers:{
+            'Content-Type':'application/json'
+        },
+        body:JSON.stringify({
+            ...datosSesion,
+            duracion,
+            completado:true
+        })
+    });
+
+    visor.classList.remove('emerger','llama-viva');
+
+    subtitulosBox.style.display='none';
+
+    narrar('La jota ha finalizado. Sellando la memoria.');
+
+    localStorage.setItem(
+        'ultima_visita',
+        new Date().toISOString()
+    );
+
+    setTimeout(() => {
+        document.getElementById('contenedor-final')
+        .classList.add('final-activo');
+    },3000);
+};
+
+window.onload = init;
+</script>
+</body>
+</html>
