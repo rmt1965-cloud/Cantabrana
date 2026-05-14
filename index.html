@@ -1,0 +1,147 @@
+
+
+!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Cantabrana: Omni-Kernel</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Spectral:ital,wght@1,400;1,700&display=swap');
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background: #000; overflow: hidden; font-family: 'Spectral', serif; height: 100vh; color: #fff; }
+
+        /* Capa de error para diagnóstico */
+        #debug-log { position: fixed; top: 10px; width: 100%; text-align: center; color: rgba(255,0,0,0.7); font-size: 10px; z-index: 9999; pointer-events: none; }
+
+        /* Botón Aura */
+        #pantalla-inicio { position: fixed; inset: 0; z-index: 9000; background: #000; display: flex; align-items: center; justify-content: center; transition: 2s; }
+        .btn-aura {
+            background: none; border: 1px solid #d4af37; color: #d4af37;
+            padding: 30px 60px; font-size: 1.2rem; cursor: pointer;
+            letter-spacing: 8px; text-transform: uppercase;
+            box-shadow: 0 0 15px rgba(212, 175, 55, 0.3);
+            animation: aura-pulsar 2s infinite ease-in-out;
+        }
+        @keyframes aura-pulsar { 0%, 100% { transform: scale(1); opacity: 0.8; } 50% { transform: scale(1.05); opacity: 1; } }
+
+        /* Escenario */
+        #escenario-liturgico { position: fixed; inset: 0; z-index: 5000; display: flex; align-items: center; justify-content: center; pointer-events: none; }
+        .texto-emergente { font-size: 2rem; text-align: center; opacity: 0; filter: blur(10px); transition: 3s; position: absolute; width: 85%; color: #f0e6d2; }
+        .visible { opacity: 1 !important; filter: blur(0px) !important; }
+        .quemar { animation: combustion 3s forwards; }
+        @keyframes combustion { 0% { opacity: 1; } 100% { filter: blur(20px) brightness(5); opacity: 0; transform: scale(1.2); } }
+
+        #pergamino-visual { max-width: 80%; max-height: 70%; opacity: 0; transition: 3s; }
+
+        /* Visor Fotos */
+        #contenedor-fotos { position: fixed; inset: 0; z-index: 100; display: flex; align-items: center; justify-content: center; }
+        .foto-film { position: absolute; max-width: 90%; max-height: 85%; opacity: 0; transition: opacity 2s; object-fit: contain; }
+        .foto-activa { opacity: 1 !important; }
+    </style>
+</head>
+<body>
+
+    <div id="debug-log"></div>
+
+    <div id="pantalla-inicio">
+        <button class="btn-aura" id="start-btn">Escuchar el tiempo</button>
+    </div>
+
+    <div id="escenario-liturgico">
+        <div id="fase1" class="texto-emergente">CANTABRANA LLAMA AL PASADO...</div>
+        <div id="fase2" class="texto-emergente">A TRAVÉS DE SUS PUERTAS CENTENARIAS...</div>
+        <img id="pergamino-visual" src="">
+        <div id="alerta-sensibilidad" class="texto-emergente" style="font-size: 1.3rem;">ESTAS CANCIONES SON DE OTRO TIEMPO...</div>
+    </div>
+
+    <div id="contenedor-fotos"><img id="visor-img" class="foto-film" src=""></div>
+
+    <audio id="audio-amb"></audio>
+    <audio id="audio-jota"></audio>
+
+    <script>
+        const log = (m) => { document.getElementById('debug-log').innerText += m + " | "; console.log(m); };
+        const params = new URLSearchParams(window.location.search);
+        const jotaId = params.get('jota');
+        const delay = ms => new Promise(res => setTimeout(res, ms));
+
+        async function ritual() {
+            let data;
+            try {
+                const res = await fetch('galeria.json');
+                data = await res.json();
+                log("JSON cargado");
+            } catch(e) { log("Error: galeria.json no encontrado"); return; }
+
+            document.getElementById('start-btn').onclick = async () => {
+                log("Ritual iniciado");
+                document.getElementById('pantalla-inicio').style.opacity = '0';
+                setTimeout(() => document.getElementById('pantalla-inicio').style.display = 'none', 2000);
+
+                // AMBIENTE
+                const amb = document.getElementById('audio-amb');
+                if (data.ambientes && data.ambientes.length > 0) {
+                    amb.src = "ambiente/" + data.ambientes[Math.floor(Math.random()*data.ambientes.length)];
+                    amb.play().catch(e => log("Error audio ambiente"));
+                }
+
+                // TEXTOS
+                const t1 = document.getElementById('fase1');
+                t1.classList.add('visible');
+                await delay(4000);
+                t1.classList.add('quemar');
+                await delay(1500);
+
+                const t2 = document.getElementById('fase2');
+                t2.classList.add('visible');
+                await delay(4000);
+                t2.classList.add('quemar');
+                await delay(1500);
+
+                // PERGAMINO
+                if (data.pergaminos && data.pergaminos.length > 0) {
+                    const perg = document.getElementById('pergamino-visual');
+                    perg.src = `assets/pergaminos/${data.pergaminos[Math.floor(Math.random()*data.pergaminos.length)]}`;
+                    perg.style.opacity = '1';
+                    const alerta = document.getElementById('alerta-sensibilidad');
+                    alerta.classList.add('visible');
+                    await delay(5000);
+                    alerta.classList.add('quemar');
+                    perg.classList.add('quemar');
+                    await delay(2000);
+                }
+
+                // JOTA
+                amb.pause();
+                if(!jotaId) { log("Error: No hay parámetro JOTA en el QR"); return; }
+                
+                const jota = document.getElementById('audio-jota');
+                jota.src = "jotas/" + jotaId;
+                jota.play().then(() => {
+                    log("Jota sonando");
+                    const fotos = [...data.fotos_arcos.map(f=>"fotos/arcos_puertas/"+f), ...data.fotos_detalles.map(f=>"fotos/detalles/"+f)];
+                    iniciarCarrusel(fotos);
+                }).catch(e => log("Error: No se encuentra el archivo " + jotaId));
+            };
+        }
+
+        function iniciarCarrusel(lista) {
+            if(lista.length === 0) { log("No hay fotos"); return; }
+            let i = 0;
+            const img = document.getElementById('visor-img');
+            const cambiar = () => {
+                img.classList.remove('foto-activa');
+                setTimeout(() => {
+                    img.src = lista[i];
+                    img.onload = () => { img.classList.add('foto-activa'); i = (i + 1) % lista.length; };
+                }, 1000);
+            };
+            cambiar();
+            setInterval(cambiar, 6000);
+        }
+
+        window.onload = ritual;
+    </script>
+</body>
+</html>
