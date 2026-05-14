@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cantabrana</title>
+    <style>
+        body { background: #000; color: #8a7a6a; font-family: serif; margin: 0; overflow: hidden; height: 100vh; }
+        #inicio { position: fixed; inset: 0; background: #000; z-index: 100; display: flex; align-items: center; justify-content: center; }
+        button { background: none; border: 1px solid #332b24; color: #fff; padding: 25px 50px; cursor: pointer; letter-spacing: 5px; font-size: 1.2rem; text-transform: uppercase; }
+        #contenedor { width: 100vw; height: 100vh; display: flex; align-items: center; justify-content: center; background: #000; }
+        img { 
+            max-width: 95%; 
+            max-height: 90%; 
+            transition: opacity 3s ease-in-out, transform 10s linear; 
+            opacity: 0; 
+            object-fit: contain;
+            transform: scale(1.05);
+        }
+        .visible { opacity: 1 !important; transform: scale(1) !important; }
+    </style>
+</head>
+<body>
+
+    <div id="inicio">
+        <button id="btn-play">Escuchar el tiempo</button>
+    </div>
+
+    <div id="contenedor">
+        <img id="foto-pantalla" src="" alt="Memoria de Cantabrana">
+    </div>
+
+    <audio id="reproductor"></audio>
+
+    <script>
+        const params = new URLSearchParams(window.location.search);
+        const archivoJota = params.get('jota');
+
+        async function cargarSistema() {
+            try {
+                const respuesta = await fetch('galeria.json');
+                const datos = await respuesta.json();
+
+                document.getElementById('btn-play').onclick = () => {
+                    if (!archivoJota) return;
+
+                    document.getElementById('inicio').style.opacity = '0';
+                    setTimeout(() => document.getElementById('inicio').style.display = 'none', 2000);
+
+                    // 1. Audio
+                    const player = document.getElementById('reproductor');
+                    player.src = "jotas/" + archivoJota;
+                    player.play();
+
+                    // 2. Mezclar fotos de ambas carpetas
+                    // Asegúrate de que estas rutas coincidan EXACTAMENTE con tus carpetas en GitHub
+                    const fotosArcos = (datos.fotos_arcos || []).map(f => "fotos/arcos_puertas/" + f);
+                    const fotosDetalles = (datos.fotos_detalles || []).map(f => "fotos/detalles/" + f);
+                    
+                    let listaFotos = [...fotosArcos, ...fotosDetalles];
+                    
+                    // Mezcla aleatoria para que no siempre sea igual
+                    listaFotos.sort(() => Math.random() - 0.5);
+
+                    if (listaFotos.length > 0) {
+                        let idx = 0;
+                        const visor = document.getElementById('foto-pantalla');
+                        
+                        const cambiarFoto = () => {
+                            visor.classList.remove('visible'); // Desvanecer la actual
+                            
+                            setTimeout(() => {
+                                // Cambiar la fuente
+                                visor.src = listaFotos[idx];
+                                
+                                // Cuando la nueva imagen cargue, mostrarla
+                                visor.onload = () => {
+                                    visor.classList.add('visible');
+                                    idx = (idx + 1) % listaFotos.length;
+                                };
+
+                                // Si la imagen falla (error 404), saltar a la siguiente
+                                visor.onerror = () => {
+                                    console.error("No se pudo cargar: " + listaFotos[idx]);
+                                    idx = (idx + 1) % listaFotos.length;
+                                    cambiarFoto(); 
+                                };
+                            }, 3000); // Esperar a que la anterior sea invisible
+                        };
+
+                        cambiarFoto();
+                        setInterval(cambiarFoto, 15000); // Cada 15 segundos cambia
+                    }
+                };
+            } catch (e) {
+                console.error("Error cargando galeria.json");
+            }
+        }
+
+        window.onload = cargarSistema;
+    </script>
+</body>
+</html>
