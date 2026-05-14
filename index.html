@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Cantabrana: Memoria Viva</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Spectral:ital,wght@1,400;1,700&display=swap');
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background: #000; overflow: hidden; font-family: 'Spectral', serif; height: 100vh; color: #7d6b58; }
+        .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); border: 0; }
+        #viewport { position: fixed; inset: 0; perspective: 1500px; display: flex; justify-content: center; align-items: center; background: radial-gradient(circle, #0a0a0a 0%, #000 100%); z-index: 1; }
+        #foto-activa { max-width: 95%; max-height: 90%; object-fit: contain; opacity: 0; filter: brightness(0) blur(15px); transform: translateZ(-200px); transition: 5s cubic-bezier(0.4, 0, 0.2, 1); will-change: transform, opacity, filter; }
+        .emerger { opacity: 1 !important; filter: brightness(0.9) blur(0px) !important; transform: translateZ(100px) !important; }
+        .llama-viva { animation: flicker 0.15s ease-in-out infinite, sway 12s ease-in-out infinite alternate; }
+        @keyframes flicker { 0% { opacity: 0.95; } 50% { opacity: 1; } 100% { opacity: 0.98; } }
+        @keyframes sway { from { transform: translateZ(100px) rotate(1deg); } to { transform: translateZ(120px) rotate(-1deg); } }
+        #subtitulos { position: fixed; bottom: 120px; width: 80%; left: 10%; text-align: center; color: #fff; font-size: 1.2rem; background: rgba(0,0,0,0.8); padding: 15px; border-radius: 5px; z-index: 7000; display: none; border: 1px solid #332b24; }
+        #capa-inicio { position: fixed; inset: 0; background: #000; z-index: 6000; display: flex; flex-direction: column; justify-content: center; align-items: center; transition: 2s; }
+        #btn-iniciar { background: #000; border: 1px solid #332b24; color: #8a7a6a; padding: 25px 60px; cursor: pointer; letter-spacing: 5px; text-transform: uppercase; }
+        #contenedor-final { position: fixed; inset: 0; z-index: 5000; display: flex; justify-content: center; align-items: center; background: #000; opacity: 0; pointer-events: none; transition: 4s; }
+        .final-activo { opacity: 1 !important; pointer-events: all !important; }
+    </style>
+</head>
+<body>
+    <div id="anuncio-lector" class="sr-only" aria-live="assertive"></div>
+    <div id="capa-inicio">
+        <img id="pergamino-img" style="width: 40%; max-width: 200px; opacity: 0.5; margin-bottom: 30px;">
+        <button id="btn-iniciar">Escuchar el tiempo</button>
+    </div>
+    <div id="viewport"><img id="foto-activa"></div>
+    <div id="subtitulos"></div>
+    <div id="contenedor-final"><img id="sello-lacrado" style="width: 60%; max-width: 300px;"></div>
+    
+    <audio id="musica-ambiente" loop></audio>
+    <audio id="player-jota"></audio>
+
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const jotaId = urlParams.get('jota');
+        const visor = document.getElementById('foto-activa');
+        const jotaPlayer = document.getElementById('player-jota');
+        const ambiente = document.getElementById('musica-ambiente');
+        const anuncioLector = document.getElementById('anuncio-lector');
+
+        function narrar(t) { anuncioLector.textContent = t; }
+
+        async function init() {
+            const res = await fetch('galeria.json');
+            const data = await res.json();
+
+            // Setup inicial aleatorio
+            if(data.pergaminos.length) document.getElementById('pergamino-img').src = `assets/pergaminos/${data.pergaminos[Math.floor(Math.random()*data.pergaminos.length)]}`;
+            if(data.ambientes.length) ambiente.src = `ambiente/${data.ambientes[Math.floor(Math.random()*data.ambientes.length)]}`;
+            if(data.sellos.length) document.getElementById('sello-lacrado').src = `assets/sellos/${data.sellos[Math.floor(Math.random()*data.sellos.length)]}`;
+
+            let fotos = [...data.fotos_arcos.map(f=>`fotos/arcos_puertas/${f}`), ...data.fotos_detalles.map(f=>`fotos/detalles/${f}`)];
+            fotos.sort(() => Math.random() - 0.5);
+
+            document.getElementById('btn-iniciar').onclick = () => {
+                document.getElementById('capa-inicio').style.opacity = '0';
+                ambiente.play();
+                
+                if(jotaId) {
+                    setTimeout(() => {
+                        document.getElementById('capa-inicio').style.display = "none";
+                        ambiente.pause();
+                        jotaPlayer.src = `jotas/${jotaId}`;
+                        jotaPlayer.play();
+                        lanzarCarrusel(fotos);
+                    }, 4000);
+                }
+            };
+        }
+
+        function lanzarCarrusel(lista) {
+            let i = 0;
+            const ciclo = () => {
+                if (jotaPlayer.ended) return;
+                visor.classList.remove('emerger', 'llama-viva');
+                setTimeout(() => {
+                    visor.src = lista[i];
+                    visor.onload = () => {
+                        visor.classList.add('emerger', 'llama-viva');
+                        i = (i + 1) % lista.length;
+                        setTimeout(ciclo, 12000);
+                    };
+                }, 2000);
+            };
+            ciclo();
+        }
+
+        jotaPlayer.onended = () => {
+            document.getElementById('contenedor-final').classList.add('final-activo');
+            narrar("La memoria ha sido sellada.");
+        };
+
+        window.onload = init;
+    </script>
+</body>
+</html>
