@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Cantabrana - Experiencia QR</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div id="pantalla-inicio">
+        <button id="btn-comenzar">Iniciar Experiencia</button>
+    </div>
+
+    <!-- Contenedores para la experiencia -->
+    <audio id="reproductor-jota" preload="auto"></audio>
+    <div id="contenedor-visual"></div>
+
+    <script>
+        const btn = document.getElementById('btn-comenzar');
+        const audio = document.getElementById('reproductor-jota');
+
+        btn.addEventListener('click', async () => {
+            document.getElementById('pantalla-inicio').style.display = 'none';
+            
+            try {
+                const res = await fetch('galeria.json');
+                const config = await res.json();
+                
+                // 1. Selección Aleatoria de la Jota
+                // Suponiendo que conoces los nombres o los recuperas:
+                const miJota = "jota_principal.mp3"; 
+                audio.src = config.rutas.jotas + miJota;
+                audio.play();
+
+                // 2. Selección de Familia de Texturas
+                const familia = config.familias_texturas[Math.floor(Math.random() * config.familias_texturas.length)];
+                
+                // 3. Lanzar la visualización
+                iniciarCicloVisual(config.rutas, familia);
+
+            } catch (err) {
+                console.error("Error en la carga de Cantabrana:", err);
+            }
+        });
+
+        function iniciarCicloVisual(rutas, familia) {
+            console.log("Iniciando familia: " + familia.nombre);
+            // Aquí integras el brote de texturas desde el centro o superior
+            // usando las rutas de fotos_arcos o fotos_detalles según el ritmo.
+            document.body.style.backgroundColor = familia.color;
+            
+            // Ejemplo de carga de un asset:
+            const selloImg = document.createElement('img');
+            selloImg.src = rutas.sellos + "sello_real.png";
+            selloImg.className = "textura-viva";
+            document.getElementById('contenedor-visual').appendChild(selloImg);
+        }
+    </script>
+
+    <style>
+        #pantalla-inicio {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: #000; display: flex; align-items: center; justify-content: center;
+            z-index: 999;
+        }
+        #btn-comenzar {
+            padding: 15px 30px; border: 1px solid gold; background: transparent;
+            color: white; cursor: pointer; font-family: serif;
+        }
+        .textura-viva {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            animation: brotar 3s ease-out forwards;
+        }
+        @keyframes brotar {
+            from { transform: translate(-50%, -50%) scale(0); opacity: 0; }
+            to { transform: translate(-50%, -50%) scale(1.2); opacity: 1; }
+        }
+    </style>
+</body>
+</html>
