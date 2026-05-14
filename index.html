@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Cantabrana: Memoria Viva</title>
+    <style>
+        body { background: #000; color: #8a7a6a; font-family: serif; margin: 0; overflow: hidden; height: 100vh; }
+        #capa-inicio { position: fixed; inset: 0; display: flex; flex-direction: column; justify-content: center; align-items: center; background: #000; z-index: 10; transition: 2s; }
+        #btn-iniciar { background: transparent; border: 1px solid #332b24; color: #fff; padding: 20px 40px; cursor: pointer; letter-spacing: 3px; }
+        #viewport { position: fixed; inset: 0; display: flex; justify-content: center; align-items: center; }
+        #foto-activa { max-width: 90%; max-height: 80%; opacity: 0; transition: 5s; transform: scale(0.8); }
+        .emerger { opacity: 1 !important; transform: scale(1) !important; }
+        #debug { position: fixed; bottom: 0; width: 100%; font-size: 10px; color: red; background: rgba(0,0,0,0.5); z-index: 100; pointer-events: none; }
+    </style>
+</head>
+<body>
+
+    <div id="debug"></div>
+
+    <div id="capa-inicio">
+        <button id="btn-iniciar">ESCUCHAR EL TIEMPO</button>
+    </div>
+
+    <div id="viewport"><img id="foto-activa" src=""></div>
+    
+    <audio id="amb" loop></audio>
+    <audio id="jota"></audio>
+
+    <script>
+        const log = (msg) => { document.getElementById('debug').innerHTML += msg + "<br>"; };
+        const params = new URLSearchParams(window.location.search);
+        const jotaSeleccionada = params.get('jota');
+
+        async function arrancar() {
+            try {
+                const res = await fetch('galeria.json');
+                const db = await res.json();
+                log("Base de datos cargada");
+
+                document.getElementById('btn-iniciar').onclick = () => {
+                    document.getElementById('capa-inicio').style.opacity = '0';
+                    
+                    // 1. Música de ambiente aleatoria
+                    const cancionAmb = db.ambientes[Math.floor(Math.random() * db.ambientes.length)];
+                    const audioAmb = document.getElementById('amb');
+                    audioAmb.src = "ambiente/" + cancionAmb;
+                    audioAmb.play().catch(e => log("Error audio ambiente: " + e));
+
+                    // 2. Si hay jota en la URL, cargarla
+                    if(jotaSeleccionada) {
+                        setTimeout(() => {
+                            audioAmb.pause();
+                            const pJota = document.getElementById('jota');
+                            pJota.src = "jotas/" + jotaSeleccionada;
+                            pJota.play().catch(e => log("Error jota: " + e));
+                            
+                            // Iniciar carrusel de fotos
+                            const todasLasFotos = [...db.fotos_arcos.map(f => "fotos/arcos_puertas/"+f), ...db.fotos_detalles.map(f => "fotos/detalles/"+f)];
+                            lanzarFotos(todasLasFotos.sort(() => Math.random() - 0.5));
+                        }, 4000);
+                    } else {
+                        log("No se detectó jota en la URL del QR");
+                    }
+                };
+            } catch(e) { log("ERROR CRÍTICO: " + e); }
+        }
+
+        function lanzarFotos(lista) {
+            let index = 0;
+            const img = document.getElementById('foto-activa');
+            const cambiar = () => {
+                img.classList.remove('emerger');
+                setTimeout(() => {
+                    img.src = lista[index];
+                    img.onload = () => {
+                        img.classList.add('emerger');
+                        index = (index + 1) % lista.length;
+                        setTimeout(cambiar, 12000);
+                    };
+                }, 2000);
+            };
+            cambiar();
+        }
+
+        window.onload = arrancar;
+    </script>
+</body>
+</html>
