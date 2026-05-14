@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Cantabrana: Omni Kernel</title>
+    <style>
+        :root { --oro-miel: #d4af37; --magma: #ff4500; --textura-activa: url('https://www.transparenttextures.com/patterns/asfalt-dark.png'); }
+        body { background: #000; color: #fff; margin: 0; overflow: hidden; font-family: 'Spectral', serif; height: 100vh; }
+
+        /* Capas de Textura Viva */
+        #capa-textura { position: fixed; inset: 0; background-image: var(--textura-activa); opacity: 0.3; pointer-events: none; z-index: 5; transition: 5s; }
+        
+        /* Botón Aura Parpadeante */
+        #pantalla-inicio { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; z-index: 1000; background: #000; transition: 3s; }
+        .btn-aura { 
+            background: none; border: 1px solid var(--oro-miel); color: var(--oro-miel); padding: 30px 60px; 
+            font-size: 1.5rem; cursor: pointer; letter-spacing: 8px; text-transform: uppercase;
+            box-shadow: 0 0 20px rgba(212, 175, 55, 0.2); animation: aura-pulsar 2s infinite; transition: 1s;
+        }
+        @keyframes aura-pulsar { 0%, 100% { box-shadow: 0 0 10px var(--oro-miel); opacity: 0.8; } 50% { box-shadow: 0 0 40px var(--oro-miel); opacity: 1; } }
+
+        /* Textos Emergentes */
+        #narrativa { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 500; padding: 20px; text-align: center; }
+        .frase { font-size: 2.5rem; opacity: 0; transition: 4s; filter: blur(10px); color: #e0d0b0; position: absolute; }
+        .quemar { animation: fucion-fuego 3s forwards; }
+        @keyframes fucion-fuego { 0% { filter: blur(0); opacity: 1; } 100% { filter: blur(20px) brightness(3); opacity: 0; transform: scale(1.5); } }
+
+        /* Carrusel Cinematico */
+        #visor { width: 100vw; height: 100vh; display: flex; align-items: center; justify-content: center; }
+        .foto-film { max-width: 90%; max-height: 85%; opacity: 0; transition: opacity 2s ease-in-out, filter 4s; filter: sepia(0.5) contrast(1.2); object-fit: contain; }
+        .foto-activa { opacity: 1 !important; filter: sepia(0) contrast(1) !important; }
+
+        /* Scroll de Información */
+        .scroll-info { position: fixed; bottom: 20px; width: 100%; white-space: nowrap; overflow: hidden; color: var(--oro-miel); font-size: 0.9rem; letter-spacing: 3px; z-index: 800; }
+        .scroll-inner { display: inline-block; animation: scroll-texto 20s linear infinite; }
+        @keyframes scroll-texto { from { transform: translateX(100%); } to { transform: translateX(-100%); } }
+
+        /* Sello y Estela */
+        #final-estela { position: fixed; inset: 0; display: none; background: #000; z-index: 2000; align-items: center; justify-content: center; flex-direction: column; }
+        .estela-img { width: 60%; transition: 5s; filter: drop-shadow(0 0 30px var(--oro-miel)); }
+        .btn-final { margin-top: 50px; background: none; border: 1px solid #444; color: #fff; padding: 15px 30px; cursor: pointer; margin: 10px; }
+    </style>
+</head>
+<body>
+
+    <div id="capa-textura"></div>
+    <div id="error-log"></div>
+
+    <div id="pantalla-inicio">
+        <button id="btn-iniciar" class="btn-aura">Escuchar el tiempo</button>
+    </div>
+
+    <div id="narrativa">
+        <div id="texto1" class="frase">CANTABRANA LLAMA AL PASADO...</div>
+        <div id="texto2" class="frase">A TRAVÉS DE SUS PUERTAS CENTENARIAS...</div>
+        <img id="pergamino" style="width: 80%; opacity: 0; transition: 3s; position: absolute;">
+    </div>
+
+    <div id="visor">
+        <img id="foto-main" class="foto-film" src="">
+    </div>
+
+    <div id="final-estela">
+        <img src="estela1.png" class="estela-img">
+        <div>
+            <button class="btn-final" onclick="location.reload()">REINICIAR</button>
+            <button class="btn-final" onclick="window.close()">SALIR</button>
+        </div>
+    </div>
+
+    <div class="scroll-info" id="scroll-ui" style="display:none;">
+        <div class="scroll-inner" id="info-texto"></div>
+    </div>
+
+    <audio id="amb-player" loop></audio>
+    <audio id="jota-player"></audio>
+
+    <script>
+        const params = new URLSearchParams(window.location.search);
+        const jotaId = params.get('jota');
+        const texturas = ['agua marina', 'vino', 'oro miel', 'magma', 'alquitran', 'glaciar']; //
+
+        async function ejecutarRitual() {
+            const res = await fetch('galeria.json');
+            const data = await res.json();
+
+            document.getElementById('btn-iniciar').onclick = async () => {
+                document.getElementById('pantalla-inicio').style.opacity = '0';
+                
+                // 1. Música Ambiente y Fase 1
+                const amb = document.getElementById('amb-player');
+                amb.src = "ambiente/" + data.ambientes[Math.floor(Math.random()*data.ambientes.length)];
+                amb.play();
+                document.getElementById('scroll-ui').style.display = 'block';
+                document.getElementById('info-texto').innerText = "Ambiente: Memoria de Cantabrana...";
+
+                // Secuencia de Textos
+                await mostrarTexto('texto1', 4000);
+                await mostrarTexto('texto2', 5000);
+
+                // 2. Pergamino y Advertencia
+                const perg = document.getElementById('pergamino');
+                perg.src = `assets/pergaminos/${data.pergaminos[Math.floor(Math.random()*data.pergaminos.length)]}`;
+                perg.style.opacity = '1';
+                // Aquí el texto emergería sobre el pergamino (lógica simplificada para fluidez)
+                await esperar(6000);
+                perg.classList.add('quemar');
+
+                // 3. Comienza la Jota
+                amb.pause();
+                const jota = document.getElementById('jota-player');
+                jota.src = "jotas/" + jotaId;
+                jota.play();
+
+                const todasLasFotos = [...data.fotos_arcos.map(f=>"fotos/arcos_puertas/"+f), ...data.fotos_detalles.map(f=>"fotos/detalles/"+f)];
+                iniciarCarrusel(todasLasFotos, jota);
+            };
+        }
+
+        async function mostrarTexto(id, tiempo) {
+            const el = document.getElementById(id);
+            el.style.opacity = '1';
+            el.style.filter = 'blur(0px)';
+            await esperar(tiempo);
+            el.classList.add('quemar');
+            await esperar(2000);
+        }
+
+        function iniciarCarrusel(fotos, player) {
+            let i = 0;
+            const visor = document.getElementById('foto-main');
+            const cambiar = () => {
+                if(player.ended) { mostrarFinal(); return; }
+                visor.classList.remove('foto-activa');
+                setTimeout(() => {
+                    visor.src = fotos[i];
+                    visor.onload = () => {
+                        visor.classList.add('foto-activa');
+                        i = (i + 1) % fotos.length;
+                    };
+                }, 2000); // 2 segundos de transición
+            };
+            cambiar();
+            setInterval(cambiar, 6000); // 4 seg foto + 2 seg transición
+        }
+
+        function mostrarFinal() {
+            const final = document.getElementById('final-estela');
+            final.style.display = 'flex';
+            // Aquí se activaría la lógica del sello lacrado y la estela1.png
+        }
+
+        const esperar = ms => new Promise(res => setTimeout(res, ms));
+        window.onload = ejecutarRitual;
+    </script>
+</body>
+</html>
