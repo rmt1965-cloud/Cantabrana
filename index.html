@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Cantabrana - Experiencia Viva</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="texture-overlay"></div>
+    <div id="app">
+        <div id="main-content">
+            <h1 id="title">Cantabrana</h1>
+            <p id="subtitle">Retazos de Vida</p>
+            <button id="btn-start">INICIAR EXPERIENCIA</button>
+            <div id="ambient-container" class="hidden">
+                <div class="scroll-wrapper"><p id="ambient-track-name"></p></div>
+            </div>
+        </div>
+    </div>
+    <audio id="player-jota"></audio>
+    <audio id="player-ambient" loop></audio>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            const params = new URLSearchParams(window.location.search);
+            const jotaFile = params.get('jota');
+            const elements = {
+                btn: document.getElementById('btn-start'),
+                jota: document.getElementById('player-jota'),
+                ambient: document.getElementById('player-ambient'),
+                overlay: document.getElementById('texture-overlay'),
+                text: document.getElementById('ambient-track-name'),
+                container: document.getElementById('ambient-container')
+            };
+
+            let galeria = {};
+            try {
+                const response = await fetch('galeria.json?v=' + Date.now());
+                galeria = await response.json();
+            } catch (e) { console.error("Error cargando activos:", e); }
+
+            elements.btn.addEventListener('click', () => {
+                elements.btn.style.display = 'none';
+
+                // Mezcla pergaminos y sellos para elegir uno al azar
+                const visuales = [...(galeria.pergaminos || []), ...(galeria.sellos || [])];
+                if(visuales.length > 0) {
+                    const elegido = visuales[Math.floor(Math.random() * visuales.length)];
+                    elements.overlay.style.backgroundImage = `url('${elegido}')`;
+                    elements.overlay.classList.add('active');
+                }
+
+                if(galeria.musica_ambiente?.length > 0) {
+                    const track = galeria.musica_ambiente[Math.floor(Math.random() * galeria.musica_ambiente.length)];
+                    elements.ambient.src = track;
+                    elements.ambient.volume = 0.3;
+                    elements.ambient.play();
+                    elements.text.innerText = `Ambiente: ${track.split('/').pop().replace('.mp3', '')} • `;
+                    elements.container.classList.remove('hidden');
+                }
+
+                if(jotaFile) {
+                    elements.jota.src = `jotas/${jotaFile}`;
+                    elements.jota.play();
+                }
+            });
+        });
+    </script>
+</body>
+</html>
