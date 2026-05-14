@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Cantabrana: Omni-Kernel</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Spectral:ital,wght@1,400;1,700&display=swap');
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background: #000; overflow: hidden; font-family: 'Spectral', serif; height: 100vh; color: #fff; }
+
+        /* CAPA DE TEXTURAS VIVAS (OMNI-KERNEL) */
+        #capa-textura { position: fixed; inset: 0; z-index: 10; opacity: 0.7; transition: background 4s ease-in-out; pointer-events: none; }
+        .fluido { animation: movimiento-materia 20s infinite alternate linear; filter: blur(30px); scale: 1.5; }
+        @keyframes movimiento-materia { 0% { transform: translate(-5%, -5%) rotate(0deg); } 100% { transform: translate(5%, 5%) rotate(5deg); } }
+
+        /* BOTÓN INICIAL */
+        #capa-inicio { position: fixed; inset: 0; z-index: 9999; background: #000; display: flex; align-items: center; justify-content: center; }
+        .btn-aura {
+            background: none; border: 1px solid #d4af37; color: #d4af37; padding: 25px 50px;
+            font-size: 1.2rem; cursor: pointer; letter-spacing: 5px; text-transform: uppercase;
+            box-shadow: 0 0 20px rgba(212, 175, 55, 0.4); animation: aura 2s infinite;
+        }
+        @keyframes aura { 0%, 100% { transform: scale(1); opacity: 0.8; } 50% { transform: scale(1.05); opacity: 1; } }
+
+        /* ESCENARIO DE TEXTOS (ORDENADO) */
+        #escenario { position: fixed; inset: 0; z-index: 5000; display: flex; align-items: center; justify-content: center; padding: 20px; pointer-events: none; }
+        .msg-fase { 
+            position: absolute; width: 85%; text-align: center; font-size: clamp(1.8rem, 7vw, 2.8rem);
+            opacity: 0; filter: blur(20px); transition: 3s ease; color: #f0e6d2; 
+        }
+
+        /* PERGAMINO ADAPTADO */
+        #contenedor-pergamino { 
+            position: absolute; width: 90%; height: 80%; display: flex; align-items: center; justify-content: center;
+            opacity: 0; transition: 4s; transform: scale(0.8);
+        }
+        #pergamino-img { width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 0 30px #000); }
+        #texto-interior { 
+            position: absolute; width: 60%; color: #3b0a0a; font-weight: bold; text-align: center;
+            font-size: clamp(1rem, 4vw, 1.4rem); line-height: 1.4; opacity: 0; transition: 3s;
+        }
+
+        /* VISOR DE FOTOS */
+        #visor { position: fixed; inset: 0; z-index: 100; display: flex; align-items: center; justify-content: center; background: #000; }
+        .foto-film { position: absolute; max-width: 90%; max-height: 85%; opacity: 0; transition: 3s ease-in-out; object-fit: contain; }
+
+        /* ESTADOS */
+        .activo { opacity: 1 !important; filter: blur(0px) !important; transform: scale(1) !important; }
+        .quemado { opacity: 0 !important; filter: blur(40px) brightness(10) !important; transform: translateY(-50px) !important; }
+    </style>
+</head>
+<body>
+
+    <div id="capa-textura" class="fluido"></div>
+
+    <div id="capa-inicio">
+        <button class="btn-aura" id="btn-ritual">Escuchar el tiempo</button>
+    </div>
+
+    <div id="escenario">
+        <div id="fase1" class="msg-fase">CANTABRANA LLAMA AL PASADO...</div>
+        <div id="fase2" class="msg-fase">A TRAVÉS DE SUS PUERTAS CENTENARIAS...</div>
+        
+        <div id="contenedor-pergamino">
+            <img id="pergamino-img" src="">
+            <div id="texto-interior">ESTAS CANCIONES SON DE OTRO TIEMPO, ALGUNAS DE ELLAS PUEDEN HERIR SU SENSIBILIDAD</div>
+        </div>
+    </div>
+
+    <div id="visor">
+        <img id="foto-activa" class="foto-film" src="">
+    </div>
+
+    <audio id="player-amb"></audio>
+    <audio id="player-jota"></audio>
+
+    <script>
+        const params = new URLSearchParams(window.location.search);
+        const jotaId = params.get('jota');
+        const delay = ms => new Promise(res => setTimeout(res, ms));
+
+        // FAMILIAS DE TEXTURAS (Omni-Kernel)
+        const texturas = {
+            vino: "radial-gradient(circle, #722f37, #3b0a0a, #000)",
+            oro: "radial-gradient(circle, #d4af37, #8a7a6a, #1a1a1a)",
+            magma: "radial-gradient(circle, #ff4500, #800000, #000)",
+            agua: "radial-gradient(circle, #00ced1, #00008b, #000)",
+            alquitran: "radial-gradient(circle, #0a0a0a, #1a1a1a, #000)"
+        };
+
+        async function ritual() {
+            const response = await fetch('galeria.json');
+            const data = await response.json();
+            const tex = document.getElementById('capa-textura');
+
+            document.getElementById('btn-ritual').onclick = async () => {
+                // Desbloqueo de seguridad
+                document.getElementById('capa-inicio').style.opacity = '0';
+                const amb = document.getElementById('player-amb');
+                const jota = document.getElementById('player-jota');
+                amb.play().then(()=>amb.pause());
+                setTimeout(() => document.getElementById('capa-inicio').style.display = 'none', 2000);
+
+                // 1. INICIO: TEXTURA VINO + AMBIENTE
+                tex.style.background = texturas.vino;
+                if(data.ambientes.length) {
+                    amb.src = "ambiente/" + data.ambientes[Math.floor(Math.random()*data.ambientes.length)];
+                    amb.play();
+                }
+
+                // FASE 1
+                const f1 = document.getElementById('fase1');
+                f1.classList.add('activo');
+                await delay(5000);
+                f1.classList.replace('activo', 'quemado');
+                await delay(2000);
+
+                // 2. FASE 2: TEXTURA ORO
+                tex.style.background = texturas.oro;
+                const f2 = document.getElementById('fase2');
+                f2.classList.add('activo');
+                await delay(5000);
+                f2.classList.replace('activo', 'quemado');
+                await delay(2000);
+
+                // 3. FASE PERGAMINO: TEXTURA MAGMA
+                tex.style.background = texturas.magma;
+                const contPerg = document.getElementById('contenedor-pergamino');
+                const txtInt = document.getElementById('texto-interior');
+                document.getElementById('pergamino-img').src = `assets/pergaminos/${data.pergaminos[Math.floor(Math.random()*data.pergaminos.length)]}`;
+                
+                contPerg.classList.add('activo');
+                await delay(2000);
+                txtInt.classList.add('activo'); // Emerge el texto como fuego
+                await delay(7000);
+                
+                txtInt.classList.replace('activo', 'quemado');
+                contPerg.classList.replace('activo', 'quemado');
+                await delay(3000);
+
+                // 4. JOTA Y FOTOS: TEXTURA AGUA MARINA
+                amb.pause();
+                tex.style.background = texturas.agua;
+                if(jotaId) {
+                    jota.src = "jotas/" + jotaId;
+                    jota.play().then(() => {
+                        const fotos = [...data.fotos_arcos.map(f=>"fotos/arcos_puertas/"+f), ...data.fotos_detalles.map(f=>"fotos/detalles/"+f)];
+                        iniciarCarrusel(fotos);
+                    }).catch(e => console.error("Error cargando jota:", jotaId));
+                }
+            };
+        }
+
+        function iniciarCarrusel(lista) {
+            let i = 0;
+            const visor = document.getElementById('foto-activa');
+            const loop = () => {
+                visor.style.opacity = '0';
+                setTimeout(() => {
+                    visor.src = lista[i];
+                    visor.onload = () => {
+                        visor.style.opacity = '1';
+                        i = (i + 1) % lista.length;
+                    };
+                }, 2000); // 2 seg de transición
+            };
+            loop();
+            setInterval(loop, 6000); // 4 seg foto + 2 seg transición
+        }
+
+        window.onload = ritual;
+    </script>
+</body>
+</html>
