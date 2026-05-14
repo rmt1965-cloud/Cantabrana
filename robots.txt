@@ -1,0 +1,4 @@
+User-agent: *
+Disallow: /jotas/
+Disallow: /fotos/
+Disallow: /galeria.json
