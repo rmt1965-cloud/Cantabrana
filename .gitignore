@@ -1,0 +1,15 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Sistemas operativos
+Thumbs.db
+.DS_Store
+
+# Archivos de diseño temporales
+*.tmp
+*.bak
+
+# Evitar subir carpetas de salida si no es necesario
+# QRS_IMPRIMIR/

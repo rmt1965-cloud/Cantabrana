@@ -1,0 +1,152 @@
+/* ============================================================
+   CANTABRANA: ECOSISTEMA VISUAL MAESTRO
+   ============================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,300;0,600;1,400&display=swap');
+
+:root {
+    --oro-miel: #ffcc33;
+    --vino-tinto: #4a0404;
+    --agua-marina: #00fbff;
+    --magma-core: #ff4500;
+    --alquitran-negro: #050505;
+    --plata-glaciar: #e0e0e0;
+    --musgo-vivo: #2d5a27;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+    background-color: #000;
+    color: #7d6b58;
+    font-family: 'Spectral', serif;
+    overflow: hidden;
+    height: 100vh;
+}
+
+/* --- 1. CAPAS DE INTERFAZ --- */
+
+#capa-gloria, #capa-aviso, #capa-final {
+    position: fixed;
+    inset: 0;
+    z-index: 9000;
+    display: none;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background: #000;
+    transition: opacity 3s ease-in-out;
+}
+
+/* --- 2. EL MOTOR DE MATERIAS VIVAS --- */
+
+.materia-viva {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    opacity: 0;
+    transition: opacity 5s ease-in-out;
+}
+
+/* Efecto de Caída (Top -> Down) */
+.caida-materia {
+    animation: caerMateria 14s ease-out forwards;
+}
+
+@keyframes caerMateria {
+    0% { transform: translateY(-100%) scale(1); opacity: 0; }
+    20% { opacity: 0.6; }
+    100% { transform: translateY(0) scale(1.1); opacity: 0.4; }
+}
+
+/* Efecto de Brote (Centro -> Out) */
+.brote-materia {
+    animation: brotarMateria 14s ease-out forwards;
+}
+
+@keyframes brotarMateria {
+    0% { transform: scale(0); opacity: 0; filter: blur(20px); }
+    30% { opacity: 0.7; filter: blur(5px); }
+    100% { transform: scale(1.2); opacity: 0.5; filter: blur(0px); }
+}
+
+/* --- 3. FAMILIAS DE TEXTURAS (GAMA COMPLETA) --- */
+
+.textura-agua-marina { background: radial-gradient(circle, var(--agua-marina) 0%, #004d4d 100%); mix-blend-mode: screen; }
+.textura-vino { background: linear-gradient(180deg, var(--vino-tinto) 0%, #1a0101 100%); mix-blend-mode: multiply; }
+.textura-oro-miel { background: radial-gradient(circle, var(--oro-miel) 0%, #8b6508 100%); filter: saturate(1.8); }
+.textura-alquitran { background: linear-gradient(180deg, #000 0%, var(--alquitran-negro) 50%, #000 100%); filter: contrast(2); }
+.textura-magma { background: conic-gradient(from 180deg, var(--magma-core), #660000, var(--magma-core)); animation: rotarMagma 20s linear infinite; }
+.textura-hielo, .textura-glaciar, .textura-plata { background: linear-gradient(135deg, #fff 0%, var(--plata-glaciar) 50%, #a0c4ff 100%); opacity: 0.3; }
+.textura-musgo { background: radial-gradient(circle, var(--musgo-vivo) 0%, #0a1a08 100%); }
+.textura-tinta { background: radial-gradient(circle, #000 10%, #1a1a1a 80%); mask-image: radial-gradient(black, transparent 70%); }
+
+@keyframes rotarMagma { from { transform: rotate(0deg) scale(1.5); } to { transform: rotate(360deg) scale(1.5); } }
+
+/* --- 4. TIPOGRAFÍA Y TEXTOS DE GLORIA --- */
+
+.texto-gloria {
+    position: relative;
+    z-index: 10;
+    color: #fff;
+    font-size: 2.2rem;
+    font-style: italic;
+    text-align: center;
+    max-width: 80%;
+    opacity: 0;
+    transition: opacity 2s ease;
+    text-shadow: 0 0 30px rgba(0,0,0,1);
+}
+
+/* --- 5. PERGAMINO Y TINTA SANGRE --- */
+
+#pergamino-contenedor {
+    width: 90%;
+    max-width: 650px;
+    min-height: 450px;
+    background-size: 100% 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+}
+
+#texto-aviso {
+    font-weight: 700;
+    font-size: 1.6rem;
+    text-align: center;
+    padding: 60px;
+    opacity: 0;
+}
+
+.tinta-sangre { color: #660000; text-shadow: 0 0 10px rgba(102,0,0,0.5); }
+.tinta-carbon { color: #0a0a0a; }
+
+/* --- 6. VISOR DE FOTOS --- */
+
+#viewport { position: fixed; inset: 0; display: none; background: #000; }
+#foto-activa { width: 100%; height: 100%; object-fit: contain; opacity: 0; transition: opacity 8s; }
+.foto-visible { opacity: 1 !important; }
+
+/* --- 7. ELEMENTOS DE CIERRE --- */
+
+.piedra-accion {
+    width: 130px;
+    cursor: pointer;
+    filter: brightness(0.6);
+    transition: 0.6s;
+}
+
+.piedra-accion:hover { filter: brightness(1.2); transform: scale(1.1); }
+
+/* --- 8. BOTÓN INICIO --- */
+
+#btn-iniciar {
+    background: transparent;
+    border: 1px solid #3d352d;
+    color: #8a7a6a;
+    padding: 20px 50px;
+    cursor: pointer;
+    letter-spacing: 5px;
+    text-transform: uppercase;
+}
